@@ -27,7 +27,7 @@ export default function WatchPlayer() {
           onContextMenu={(e) => e.preventDefault()}
         />
       </div>
-      <section className="lower" style={{ borderTop: 0, paddingTop: 48 }}>
+      {/* <section className="lower" style={{ borderTop: 0, paddingTop: 48 }}>
         <div>
           <h2>Jump to a part</h2>
           <ol className="chapters">
@@ -40,7 +40,7 @@ export default function WatchPlayer() {
             ))}
           </ol>
         </div>
-      </section>
+      </section> */}
     </>
   );
 }

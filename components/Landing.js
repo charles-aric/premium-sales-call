@@ -115,7 +115,7 @@ export default function Landing() {
           </div>
         </section>
 
-        <section className="lower">
+        {/* <section className="lower">
           <div>
             <h2>What happens in the recording</h2>
             <ol className="chapters">
@@ -146,7 +146,7 @@ export default function Landing() {
             </p>
             <Link className="small-btn" href="/login" style={{ display: "inline-block", textDecoration: "none" }}>Sign in</Link>
           </div>
-        </section>
+        </section> */}
       </main>
     </>
   );
