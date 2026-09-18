@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sit in on a real sales call with Sharan</title>
+<meta name="description" content="One full sales call and the consultancy session that followed, recorded and unedited. $20, one-time.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --paper: #E8EDF1;
+    --ink: #13212E;
+    --muted: #566573;
+    --line: #C5CFD8;
+    --panel: #0F1B26;
+    --panel-bar: #33485A;
+    --go: #0B7A53;
+    --go-dark: #095F41;
+    --go-light: #3FD19B;
+    --white: #FFFFFF;
+    --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+    --body: "Figtree", "Segoe UI", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font: 400 1.0625rem/1.6 var(--body);
+  }
+  a { color: inherit; }
+  :focus-visible { outline: 3px solid var(--go); outline-offset: 3px; border-radius: 4px; }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+
+  .top {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 28px 0 0;
+  }
+  .top .name { font: 700 1.125rem/1 var(--display); letter-spacing: -0.01em; }
+  .top a { font-size: 0.9375rem; color: var(--muted); }
+
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: 56px;
+    align-items: center;
+    padding: 72px 0 88px;
+  }
+  h1 {
+    font: 700 clamp(2.25rem, 4.4vw, 3.4rem)/1.02 var(--display);
+    letter-spacing: -0.035em;
+    margin: 0 0 24px;
+    text-wrap: balance;
+  }
+  .lede { margin: 0 0 32px; max-width: 34em; color: var(--ink); }
+  .fine { margin: 14px 0 0; font-size: 0.9375rem; color: var(--muted); max-width: 30em; }
+
+  .pay {
+    appearance: none; border: 0; cursor: pointer;
+    background: var(--go); color: var(--white);
+    font: 600 1.0625rem/1 var(--body);
+    padding: 18px 28px; border-radius: 999px;
+    transition: background-color .15s ease;
+  }
+  .pay:hover { background: var(--go-dark); }
+  .pay[disabled] { opacity: .6; cursor: progress; }
+
+  /* Player */
+  .player {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    background: var(--panel);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 30px 60px -30px rgba(19, 33, 46, .55);
+  }
+  .player video { width: 100%; height: 100%; display: block; background: #000; }
+  .locked {
+    position: absolute; inset: 0;
+    display: grid; grid-template-rows: 1fr auto;
+    color: var(--white);
+  }
+  .locked .mid {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 18px; text-align: center; padding: 24px;
+  }
+  .lock-icon { width: 34px; height: 34px; opacity: .9; }
+  .locked .mid p { margin: 0; font-size: 0.9375rem; color: #B8C6D2; }
+  .wave { padding: 0 22px 8px; }
+  .wave svg { width: 100%; height: 64px; display: block; }
+  .wave rect { fill: var(--panel-bar); transition: fill .15s ease; }
+  .wave rect.on { fill: var(--go-light); }
+  .timebar {
+    display: flex; justify-content: space-between;
+    padding: 0 22px 16px; font-size: 0.8125rem; color: #8FA1B0;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .status {
+    min-height: 1.6em; margin: 16px 0 0;
+    font-size: 0.9375rem; color: var(--muted);
+  }
+  .status.bad { color: #A3261B; }
+
+  .keep {
+    margin-top: 16px; padding: 16px 18px;
+    background: var(--white); border-radius: 10px;
+    font-size: 0.9375rem;
+  }
+  .keep p { margin: 0 0 10px; }
+  .keep .row { display: flex; gap: 8px; }
+  .keep input {
+    flex: 1; min-width: 0; font: 400 0.875rem/1 var(--body);
+    padding: 11px 12px; border: 1px solid var(--line); border-radius: 8px; color: var(--ink); background: var(--paper);
+  }
+  .small-btn {
+    appearance: none; cursor: pointer;
+    font: 600 0.875rem/1 var(--body);
+    padding: 11px 16px; border-radius: 8px;
+    border: 1px solid var(--ink); background: transparent; color: var(--ink);
+  }
+  .small-btn:hover { background: var(--ink); color: var(--white); }
+
+  /* Lower section */
+  .lower {
+    display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 56px;
+    padding: 64px 0 96px; border-top: 1px solid var(--line);
+  }
+  h2 { font: 700 1.625rem/1.15 var(--display); letter-spacing: -0.02em; margin: 0 0 24px; }
+
+  .chapters { list-style: none; margin: 0; padding: 0; }
+  .chapters li { border-bottom: 1px solid var(--line); }
+  .chapters button {
+    appearance: none; border: 0; background: none; cursor: pointer; text-align: left;
+    width: 100%; display: grid; grid-template-columns: 4.5rem 1fr; gap: 12px;
+    padding: 15px 0; color: var(--ink); font: 400 1.0625rem/1.45 var(--body);
+  }
+  .chapters time { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .chapters button:hover span, .chapters button:focus-visible span { color: var(--go-dark); }
+
+  .already label { display: block; font-size: 0.875rem; font-weight: 500; margin: 0 0 6px; }
+  .already input {
+    width: 100%; font: 400 1rem/1 var(--body);
+    padding: 13px 14px; margin: 0 0 14px;
+    border: 1px solid var(--line); border-radius: 8px; background: var(--white); color: var(--ink);
+  }
+  .already p { margin: 0 0 20px; color: var(--muted); font-size: 0.9375rem; }
+
+  footer { border-top: 1px solid var(--line); padding: 24px 0 40px; font-size: 0.875rem; color: var(--muted); }
+
+  [hidden] { display: none !important; }
+
+  @media (max-width: 880px) {
+    .hero { grid-template-columns: 1fr; gap: 36px; padding: 44px 0 56px; }
+    .lower { grid-template-columns: 1fr; gap: 48px; padding: 48px 0 64px; }
+    .locked .mid { gap: 12px; padding: 16px; }
+    .locked .mid p, .lock-icon { display: none; }
+    .wave svg { height: 36px; }
+    .timebar { padding-bottom: 12px; }
+    #buyBlock .pay { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+
+<!-- ============ EDIT: your product path, video length and chapters ============ -->
+<script>
+  window.SITE = {
+    productPath: "sharan-sales-call-recording",          // your FastSpring product path
+    durationMinutes: 47,                        // length of the video
+    chapters: [                                 // start minute + what happens there
+      { at: 0,  label: "Opening the call and finding out what the buyer needs" },
+      { at: 8,  label: "Walking through the product against those needs" },
+      { at: 19, label: "The pricing conversation and the first objection" },
+      { at: 27, label: "Handling \"we need to think about it\"" },
+      { at: 34, label: "Consultancy session, launch plan and next steps" },
+      { at: 43, label: "Closing, follow-up and what was agreed" }
+    ]
+  };
+</script>
+<!-- Replace data-storefront with your own popup storefront URL -->
+<script
+  id="fsc-api"
+  src="https://sbl.onfastspring.com/sbl/1.0.9/fastspring-builder.min.js"
+  type="text/javascript"
+  data-storefront="enatega.test.onfastspring.com/popup-sales-call-recording"
+  data-popup-closed="onCheckoutClosed">
+</script>
+</head>
+
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <span class="name">Sharan</span>
+    <a href="#already">Already paid?</a>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="copy">
+        <h1>Sit in on a real sales call with Sharan.</h1>
+        <p class="lede">One full sales call and the consultancy session that followed, recorded and unedited. You hear the questions, the pricing talk, the objections and how the deal moved forward.</p>
+        <div id="buyBlock">
+          <button class="pay" type="button" data-pay>Pay $20 to unlock</button>
+          <p class="fine">One-time payment. Watch as many times as you like, on up to 3 devices. Checkout by FastSpring, with cards and PayPal.</p>
+        </div>
+        <p class="status" id="status" role="status" aria-live="polite"></p>
+        <div class="keep" id="keep" hidden>
+          <p>Unlocked. Save this link to watch again. It works on up to 3 of your devices.</p>
+          <div class="row">
+            <input id="keepLink" type="text" readonly aria-label="Your personal access link">
+            <button class="small-btn" type="button" id="copyLink">Copy link</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="player-col">
+        <div class="player" id="player">
+          <div class="locked" id="locked">
+            <div class="mid">
+              <svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg>
+              <button class="pay" type="button" data-pay>Pay $20 to unlock</button>
+              <p>The full recording plays here right after payment.</p>
+            </div>
+            <div class="wave" aria-hidden="true"><svg id="wave" preserveAspectRatio="none"></svg></div>
+            <div class="timebar" aria-hidden="true"><span>0:00</span><span id="totalTime"></span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="lower">
+      <div>
+        <h2>What happens in the recording</h2>
+        <ol class="chapters" id="chapters"></ol>
+      </div>
+
+      <div class="already" id="already">
+        <h2>Already paid?</h2>
+        <p>Enter the email you paid with and the order reference from your FastSpring receipt.</p>
+        <form id="alreadyForm">
+          <label for="email">Email</label>
+          <input id="email" type="email" autocomplete="email" required>
+          <label for="reference">Order reference</label>
+          <input id="reference" type="text" placeholder="ABC260918-1234-56789" required>
+          <button class="small-btn" type="submit">Unlock the video</button>
+        </form>
+        <p class="status" id="alreadyStatus" role="status" aria-live="polite"></p>
+      </div>
+    </section>
+  </main>
+
+  <footer>Payments, tax and receipts are handled by FastSpring.</footer>
+</div>
+
+<script>
+(function () {
+  var SITE = window.SITE;
+  var total = SITE.durationMinutes * 60;
+  var BARS = 96;
+  var video = null;
+
+  var $ = function (id) { return document.getElementById(id); };
+  var statusEl = $("status");
+
+  function fmt(sec) {
+    var m = Math.floor(sec / 60), s = Math.floor(sec % 60);
+    return m + ":" + (s < 10 ? "0" : "") + s;
+  }
+  function say(el, text, bad) {
+    el.textContent = text || "";
+    el.classList.toggle("bad", Boolean(bad));
+  }
+
+  /* ----- waveform + chapter list ----- */
+  $("totalTime").textContent = fmt(total);
+  var svg = $("wave");
+  svg.setAttribute("viewBox", "0 0 " + BARS * 4 + " 64");
+  var seed = 7;
+  function rand() { seed = (seed * 16807) % 2147483647; return seed / 2147483647; }
+  for (var i = 0; i < BARS; i++) {
+    var h = 8 + Math.round(rand() * rand() * 52);
+    var r = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    r.setAttribute("x", i * 4); r.setAttribute("y", (64 - h) / 2);
+    r.setAttribute("width", 2.4); r.setAttribute("height", h); r.setAttribute("rx", 1.2);
+    svg.appendChild(r);
+  }
+  var bars = svg.querySelectorAll("rect");
+
+  function light(from, to) {
+    for (var i = 0; i < bars.length; i++) {
+      var t = (i / BARS) * SITE.durationMinutes;
+      bars[i].classList.toggle("on", from != null && t >= from && t < to);
+    }
+  }
+
+  var list = $("chapters");
+  SITE.chapters.forEach(function (c, idx) {
+    var next = SITE.chapters[idx + 1] ? SITE.chapters[idx + 1].at : SITE.durationMinutes;
+    var li = document.createElement("li");
+    var b = document.createElement("button");
+    b.type = "button";
+    b.innerHTML = "<time>" + fmt(c.at * 60) + "</time><span></span>";
+    b.querySelector("span").textContent = c.label;
+    b.addEventListener("mouseenter", function () { light(c.at, next); });
+    b.addEventListener("focus", function () { light(c.at, next); });
+    b.addEventListener("mouseleave", function () { light(null); });
+    b.addEventListener("blur", function () { light(null); });
+    b.addEventListener("click", function () {
+      if (video) { video.currentTime = c.at * 60; video.play(); }
+      $("player").scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+    li.appendChild(b);
+    list.appendChild(li);
+  });
+
+  /* ----- unlocking ----- */
+  function showVideo(orderId) {
+    $("locked").hidden = true;
+    $("buyBlock").hidden = true;
+    $("already").hidden = true;
+    if (!video) {
+      video = document.createElement("video");
+      video.controls = true;
+      video.playsInline = true;
+      video.preload = "metadata";
+      video.setAttribute("controlsList", "nodownload");
+      video.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+      video.src = "/api/video";
+      $("player").appendChild(video);
+    }
+    if (orderId) {
+      $("keepLink").value = location.origin + "/?order=" + encodeURIComponent(orderId);
+      $("keep").hidden = false;
+    }
+    say(statusEl, "");
+  }
+
+  function unlock(body, el, triesLeft, waited) {
+    say(el, waited ? "Confirming your payment. This can take up to a minute, keep this page open." : "Checking your payment...");
+    return fetch("/api/unlock", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body)
+    })
+      .then(function (res) { return res.json().then(function (d) { return { status: res.status, data: d }; }); })
+      .then(function (r) {
+        if (r.data.ok) { say(el, ""); showVideo(r.data.orderId); return; }
+        // FastSpring's payment notice can take a little while to reach us.
+        if (r.status === 409 && triesLeft > 0) {
+          return new Promise(function (go) { setTimeout(go, 2500); })
+            .then(function () { return unlock(body, el, triesLeft - 1, true); });
+        }
+        say(el, r.data.message || "Could not unlock. Try again.", true);
+      })
+      .catch(function () { say(el, "Connection problem. Check your internet and try again.", true); });
+  }
+
+  // Called by FastSpring when the checkout popup closes.
+  // data is null when the buyer closed it without paying.
+  window.onCheckoutClosed = function (data) {
+    if (data && data.id) unlock({ orderId: data.id }, statusEl, 36);
+  };
+
+  document.querySelectorAll("[data-pay]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      if (!window.fastspring || !fastspring.builder) {
+        say(statusEl, "Checkout is still loading. Try again in a moment.", true);
+        return;
+      }
+      fastspring.builder.reset();
+      fastspring.builder.add(SITE.productPath);
+      fastspring.builder.checkout();
+    });
+  });
+
+  $("alreadyForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    unlock({ email: $("email").value, reference: $("reference").value }, $("alreadyStatus"), 0);
+  });
+
+  $("copyLink").addEventListener("click", function () {
+    var input = $("keepLink");
+    input.select();
+    (navigator.clipboard ? navigator.clipboard.writeText(input.value) : Promise.reject())
+      .catch(function () { document.execCommand("copy"); })
+      .then(function () { $("copyLink").textContent = "Link copied"; });
+  });
+
+  /* ----- on load: personal link, or an existing cookie ----- */
+  var orderFromLink = new URLSearchParams(location.search).get("order");
+  if (orderFromLink) {
+    history.replaceState(null, "", location.pathname);
+    unlock({ orderId: orderFromLink }, statusEl, 0);
+  } else {
+    fetch("/api/status")
+      .then(function (r) { return r.json(); })
+      .then(function (d) { if (d.unlocked) showVideo(d.orderId); })
+      .catch(function () {});
+  }
+})();
+</script>
+</body>
+</html>
