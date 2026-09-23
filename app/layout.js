@@ -1,5 +1,6 @@
 import "./globals.css";
 import { SITE } from "@/lib/site";
+import Analytics from "@/components/Analytics";
 
 export const metadata = {
   title: SITE.headline,
@@ -18,6 +19,7 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body>
+        <Analytics />
         <div className="wrap">
           {children}
           <footer>Payments, tax and receipts are handled by FastSpring.</footer>

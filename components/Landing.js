@@ -5,6 +5,7 @@ import Script from "next/script";
 import Link from "next/link";
 import { SITE } from "@/lib/site";
 import { clock, waveform } from "@/lib/format";
+import { track, priceNumber } from "@/lib/analytics";
 
 const BARS = waveform();
 
@@ -17,7 +18,17 @@ export default function Landing() {
   // data is null when the buyer closed it without paying.
   useEffect(() => {
     window.onCheckoutClosed = (data) => {
-      if (data && data.id) unlock(data.id, 24);
+      if (data && data.id) {
+        track("purchase", {
+          transaction_id: data.id,
+          value: priceNumber(SITE.price),
+          currency: "USD",
+          items: [{ item_id: SITE.productPath, item_name: SITE.headline }],
+        });
+        unlock(data.id, 24);
+      } else {
+        track("checkout_abandon");
+      }
     };
     return () => { delete window.onCheckoutClosed; };
   }, []);
@@ -32,27 +43,36 @@ export default function Landing() {
         body: JSON.stringify({ orderId }),
       });
       const data = await res.json();
-      if (data.ok) { window.location.href = "/watch"; return; }
+      if (data.ok) {
+        track("purchase_confirmed", { transaction_id: orderId });
+        window.location.href = "/watch";
+        return;
+      }
       if (res.status === 409 && triesLeft > 0) {
         setTimeout(() => unlock(orderId, triesLeft - 1), 2500);
         return;
       }
+      track("unlock_failed", { transaction_id: orderId, reason: data.message || `status_${res.status}` });
       setStatus({ text: data.message || "Could not unlock. Try signing in.", bad: true });
-    } catch {
+    } catch (err) {
+      track("unlock_failed", { transaction_id: orderId, reason: (err && err.message) || "network_error" });
       setStatus({ text: "Connection problem. Check your internet, then sign in with your receipt details.", bad: true });
     }
     busy.current = false;
   }
 
-  function pay() {
+  function pay(location) {
     if (busy.current) return;
+    track("cta_click", { cta_location: location, cta_text: cta, price: SITE.price });
     if (!window.fastspring || !window.fastspring.builder) {
+      track("checkout_not_ready", { cta_location: location });
       setStatus({ text: "Checkout is still loading. Try again in a moment.", bad: true });
       return;
     }
     window.fastspring.builder.reset();
     window.fastspring.builder.add(SITE.productPath);
     window.fastspring.builder.checkout();
+    track("checkout_open", { cta_location: location });
   }
 
   const cta = `Pay ${SITE.price} to unlock`;
@@ -69,7 +89,7 @@ export default function Landing() {
 
       <header className="top">
         <span className="name">{SITE.name}</span>
-        <nav><Link href="/login">Already paid? Sign in</Link></nav>
+        <nav><Link href="/login" onClick={() => track("login_click")}>Already paid? Sign in</Link></nav>
       </header>
 
       <main>
@@ -78,7 +98,7 @@ export default function Landing() {
             <h1>{SITE.headline}</h1>
             <p className="lede">{SITE.lede}</p>
             <div className="buy">
-              <button className="pay" type="button" onClick={pay}>{cta}</button>
+              <button className="pay" type="button" onClick={() => pay("hero")}>{cta}</button>
               <p className="fine">
                 One-time payment. Watch as many times as you like, on up to {SITE.maxDevices} devices.
                 Checkout by FastSpring, with cards and PayPal.
@@ -95,7 +115,7 @@ export default function Landing() {
                     <rect x="4.5" y="10.5" width="15" height="10" rx="2.5" />
                     <path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" />
                   </svg>
-                  <button className="pay" type="button" onClick={pay}>{cta}</button>
+                  <button className="pay" type="button" onClick={() => pay("player")}>{cta}</button>
                   <p>The full recording plays right after payment.</p>
                 </div>
                 <div className="wave" aria-hidden="true">
