@@ -1,10 +1,10 @@
 # Premium sales call video
 
-A Next.js app for Vercel. One sales page, a $20 FastSpring checkout, a login page, and a watch page that only opens for the email that paid.
+A Next.js app for Vercel. One sales page, a $1 FastSpring checkout, a login page, and a watch page that only opens for the email that paid.
 
 ## How it works
 
-1. A visitor clicks "Pay $20 to unlock" and pays in the FastSpring popup.
+1. A visitor clicks "Pay $1 to unlock" and pays in the FastSpring popup.
 2. FastSpring calls `/api/webhook`. The app checks the signature and saves the order in Redis under the buyer's email.
 3. The popup closes, the page confirms the order, signs the buyer in, and opens `/watch`.
 4. On any other device, the buyer goes to `/login` and enters the email they paid with and the order reference from the FastSpring receipt. The reference works as their password.
@@ -70,7 +70,7 @@ Then open Deployments and redeploy, so the new variables apply.
 
 ## Good to know
 
-- Vercel's free Hobby plan is for non-commercial use. For a paid product, their terms ask for the Pro plan at $20 a month.
+- Vercel's free Hobby plan is for non-commercial use. For a paid product, their terms ask for the Pro plan at $1 a month.
 - To reset a buyer who ran out of device slots, open the Upstash data browser and delete the key `devices:THEIR_ORDER_ID`.
 - Vercel's free plan includes 1 GB of Blob storage and 10 GB of Blob transfer a month. Your video is 222 MB, so that is about 45 full viewings a month. Past the limit Vercel does not charge you, it blocks the Blob store for 30 days, which means the video stops playing for everyone. Upgrade to Pro before you get close.
 - The temporary video link lasts 6 hours. A buyer could pass that link to someone for those hours. Nothing on the web stops screen recording either.
