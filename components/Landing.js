@@ -5,7 +5,7 @@ import Script from "next/script";
 import Link from "next/link";
 import { SITE } from "@/lib/site";
 import { clock, waveform } from "@/lib/format";
-import { track, priceNumber } from "@/lib/analytics";
+import { track, pixel, priceNumber } from "@/lib/analytics";
 
 const BARS = waveform();
 
@@ -25,6 +25,12 @@ export default function Landing() {
           currency: "USD",
           items: [{ item_id: SITE.productPath, item_name: SITE.headline }],
         });
+        pixel("Purchase", {
+          value: priceNumber(SITE.price),
+          currency: "USD",
+          content_ids: [SITE.productPath],
+          content_type: "product",
+        }, data.id);
         unlock(data.id, 24);
       } else {
         track("checkout_abandon");
@@ -73,6 +79,12 @@ export default function Landing() {
     window.fastspring.builder.add(SITE.productPath);
     window.fastspring.builder.checkout();
     track("checkout_open", { cta_location: location });
+    pixel("InitiateCheckout", {
+      value: priceNumber(SITE.price),
+      currency: "USD",
+      content_ids: [SITE.productPath],
+      content_type: "product",
+    });
   }
 
   const cta = `Pay ${SITE.price} to unlock`;
