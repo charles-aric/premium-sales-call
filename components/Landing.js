@@ -17,6 +17,12 @@ const Arrow = () => (
   </svg>
 );
 
+const Instagram = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
+  </svg>
+);
+
 const BARS = waveform();
 
 export default function Landing() {
@@ -110,13 +116,12 @@ export default function Landing() {
     busy.current = false;
   }
 
-  const cta = `Unlock the full call for ${SITE.price}`;
+  const cta = `Unlock everything for ${SITE.price}`;
   const days = SITE.guaranteeDays;
   const chapters = SITE.showChapters ? SITE.chapters : [];
   const accessAnswer = SITE.maxDevices > 1
     ? `Sign in with the email you paid with and the receipt number from your Stripe receipt. One purchase works on up to ${SITE.maxDevices} devices.`
     : "This browser stays signed in after you pay. If you get signed out, use the email you paid with and the receipt number from your Stripe receipt.";
-  const faq = [SITE.faq[0], ["How do I watch on another device?", accessAnswer], ...SITE.faq.slice(1)].filter(Boolean);
   const terms = ["One time", "Lifetime access", days ? `${days} day money back` : null, "Card payment by Stripe"].filter(Boolean).join(". ") + ".";
   const statusLine = <p className={`status${status.bad ? " bad" : ""}`} role="status" aria-live="polite">{status.text}</p>;
 
@@ -259,6 +264,9 @@ export default function Landing() {
             <div>
               <h3>{SITE.name}</h3>
               <p>{SITE.about}</p>
+              <a className="social" href={SITE.instagram} target="_blank" rel="noopener noreferrer" onClick={() => track("instagram_click")}>
+                <Instagram />@sharan.gohar on Instagram
+              </a>
             </div>
           </div>
           {days > 0 && (
@@ -281,9 +289,9 @@ export default function Landing() {
               <span className="dim small">Opens right after payment</span>
             </div>
             <ul className="ticks">
-              <li><Check />Full call plus consultancy session</li>
-              <li><Check />Lifetime access</li>
-              <li><Check />Watch as many times as you like</li>
+              {SITE.includes.map((line) => (
+                <li key={line}><Check />{line}</li>
+              ))}
               {days > 0 && <li><Check />{days} day money back</li>}
             </ul>
             <button className="pay big block" type="button" onClick={() => pay("pricing")}>Pay {SITE.price} and watch now</button>
@@ -292,22 +300,12 @@ export default function Landing() {
           </div>
         </section>
 
-        <section className="split bottom">
-          <div>
-            <h2>Questions</h2>
-            <dl className="faq">
-              {faq.map(([q, a]) => (
-                <div key={q}><dt>{q}</dt><dd>{a}</dd></div>
-              ))}
-            </dl>
-          </div>
-          <div>
-            <h2>How access works</h2>
-            <div className="card access">
-              <p>After you pay, the video opens right away and this browser stays signed in.</p>
-              <p className="dim">{accessAnswer}</p>
-              <Link className="ghost" href="/login" onClick={() => track("login_click")}>Sign in</Link>
-            </div>
+        <section className="single bottom">
+          <h2>How access works</h2>
+          <div className="card access">
+            <p>After you pay, the video opens right away and this browser stays signed in.</p>
+            <p className="dim">{accessAnswer}</p>
+            <Link className="ghost" href="/login" onClick={() => track("login_click")}>Sign in</Link>
           </div>
         </section>
       </main>

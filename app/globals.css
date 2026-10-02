@@ -158,6 +158,9 @@ h3 { font-weight: 700; font-size: 1.25rem; line-height: 1.2; margin-bottom: 6px;
   display: flex; align-items: center; justify-content: center;
   background: var(--raised); border: 1px solid #2A2A30; color: var(--accent); font: 700 1.375rem/1 var(--display);
 }
+.about .social { display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 0.9375rem; font-weight: 600; color: var(--accent); }
+.about .social:hover { color: var(--accent-hi); }
+.about .social svg { width: 18px; height: 18px; }
 .guarantee { border-color: var(--accent); }
 .guarantee svg { flex-shrink: 0; width: 32px; height: 32px; color: var(--accent); }
 
@@ -171,17 +174,20 @@ h3 { font-weight: 700; font-size: 1.25rem; line-height: 1.2; margin-bottom: 6px;
 .ticks li { display: flex; gap: 10px; align-items: flex-start; }
 .ticks .check { width: 18px; height: 18px; margin-top: 2px; }
 
-/* Questions and access */
-.faq { margin: 0; border-top: 1px solid var(--line); }
-.faq > div { padding: 14px 0; border-bottom: 1px solid var(--line); }
-.faq dt { font-weight: 700; margin-bottom: 4px; }
-.faq dd { margin: 0; font-size: 0.9375rem; color: var(--soft); }
-.access { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
+/* Access */
+.single.bottom { padding: 40px 0 72px; max-width: 640px; display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column; }
+.single.bottom h2 { margin-bottom: 16px; }
+.access { display: flex; flex-direction: column; gap: 12px; align-items: center; }
 .access p.dim { font-size: 0.9375rem; }
 
 /* Sticky pay bar, phones only */
 .sticky { display: none; }
 
+footer a { color: var(--soft); }
+footer a:hover { color: var(--text); }
 footer {
   display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
   border-top: 1px solid var(--line); padding: 20px 0 28px; font-size: 0.8125rem; color: var(--muted);

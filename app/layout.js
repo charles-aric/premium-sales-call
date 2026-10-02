@@ -5,7 +5,7 @@ import Analytics from "@/components/Analytics";
 export const viewport = { themeColor: "#0E0E10" };
 
 export const metadata = {
-  title: `${SITE.headline} | ${SITE.name}`,
+  title: `${SITE.headline} by ${SITE.name}`,
   description: SITE.lede,
 };
 
@@ -26,7 +26,9 @@ export default function RootLayout({ children }) {
           {children}
           <footer>
             <span>Card payments and receipts by Stripe.</span>
-            <span>{SITE.domain}</span>
+            <span>
+              <a href={SITE.instagram} target="_blank" rel="noopener noreferrer">Instagram</a> · {SITE.domain}
+            </span>
           </footer>
         </div>
       </body>
