@@ -30,13 +30,13 @@ export default function LoginForm() {
     <form onSubmit={submit}>
       <div className="field">
         <label htmlFor="email">Email you paid with</label>
-        <input id="email" name="email" type="email" autoComplete="email" required />
+        <input id="email" name="email" type="email" autoComplete="email" placeholder="you@example.com" required />
       </div>
       <div className="field">
         <label htmlFor="reference">Receipt number</label>
         <input id="reference" name="reference" type="text" placeholder="1234-5678" required />
       </div>
-      <button className="pay" type="submit" disabled={sending}>Sign in</button>
+      <button className="pay big block" type="submit" disabled={sending}>Sign in and watch</button>
       <p className={`status${status.bad ? " bad" : ""}`} role="status" aria-live="polite">{status.text}</p>
     </form>
   );

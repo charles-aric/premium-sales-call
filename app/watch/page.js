@@ -25,7 +25,7 @@ export default async function WatchPage() {
       </header>
       <main className="watch">
         <WatchPlayer />
-        <p className="signed" style={{ marginTop: -40, paddingBottom: 64 }}>Signed in as {session.email}</p>
+        <p className="signed">Signed in as {session.email}</p>
       </main>
     </>
   );

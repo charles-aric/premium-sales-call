@@ -2,9 +2,11 @@ import "./globals.css";
 import { SITE } from "@/lib/site";
 import Analytics from "@/components/Analytics";
 
+export const viewport = { themeColor: "#0E0E10" };
+
 export const metadata = {
-  title: SITE.headline,
-  description: "One full sales call and the consultancy session that followed, recorded and unedited. One-time payment.",
+  title: `${SITE.headline} | ${SITE.name}`,
+  description: SITE.lede,
 };
 
 export default function RootLayout({ children }) {
@@ -14,7 +16,7 @@ export default function RootLayout({ children }) {
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
       </head>
@@ -22,7 +24,10 @@ export default function RootLayout({ children }) {
         <Analytics />
         <div className="wrap">
           {children}
-          <footer>Payments and receipts are handled by Stripe.</footer>
+          <footer>
+            <span>Card payments and receipts by Stripe.</span>
+            <span>{SITE.domain}</span>
+          </footer>
         </div>
       </body>
     </html>

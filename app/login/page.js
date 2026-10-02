@@ -14,15 +14,18 @@ export default async function LoginPage() {
   return (
     <>
       <header className="top">
-        <Link className="name" href="/" style={{ textDecoration: "none", color: "var(--ink)" }}>{SITE.name}</Link>
+        <Link className="name" href="/">{SITE.name}</Link>
         <nav><Link href="/">Not bought yet?</Link></nav>
       </header>
       <main className="narrow">
-        <h1>Sign in to watch</h1>
+        <span className="eyebrow plain">Sign in</span>
+        <h1>Your video is tied to your email.</h1>
         <p className="lede">
-          Use the email you paid with. Your receipt number is in the receipt email from Stripe.
+          Type the email you paid with and the receipt number from your Stripe receipt email. No password to remember.
         </p>
         <LoginForm />
+        <p className="fine">The receipt number looks like 1234-5678. It is in the email Stripe sent right after you paid.</p>
+        <p className="fine">Bought before the move to Stripe? Use the same email with your earlier order reference.</p>
       </main>
     </>
   );

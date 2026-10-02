@@ -17,7 +17,7 @@ export async function POST(request) {
         price_data: {
           currency: "usd",
           unit_amount: Math.round(priceNumber(SITE.price) * 100),
-          product_data: { name: SITE.headline },
+          product_data: { name: SITE.productName },
         },
       }],
       metadata: { product: SITE.productPath },

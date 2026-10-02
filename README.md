@@ -1,6 +1,6 @@
 # Premium sales call video
 
-A Next.js app for Vercel. One sales page, a $1 Stripe checkout, a login page, and a watch page that only opens for the email that paid.
+A Next.js app for Vercel. One sales page with a pricing box and questions, a $1 Stripe checkout, a login page, and a watch page that only opens for the email that paid.
 
 ## How it works
 
@@ -14,7 +14,11 @@ A Next.js app for Vercel. One sales page, a $1 Stripe checkout, a login page, an
 
 ## What you edit
 
-`lib/site.js` holds the product id, price, headline, text, video length, chapter list and device limit. Nothing else needs touching.
+`lib/site.js` holds the product id, price, headline and all sales page text (proof numbers, what is inside, who it is for, about, questions), the money back period, video length, chapter list and device limit. Nothing else needs touching.
+
+- `guaranteeDays: 0` removes the money back promise everywhere.
+- `showChapters: true` shows the chapter list on the sales page and the jump list on the watch page. Fix the chapter minutes first.
+- `productName` is what Stripe shows on the checkout page and receipt.
 
 ## Setup
 

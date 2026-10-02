@@ -39,6 +39,8 @@ export default function WatchPlayer() {
     video.current.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
+  const chapters = SITE.showChapters ? SITE.chapters : [];
+
   return (
     <>
       <div className="player">
@@ -55,11 +57,15 @@ export default function WatchPlayer() {
           onEnded={() => track("video_complete")}
         />
       </div>
-      {/* <section className="lower" style={{ borderTop: 0, paddingTop: 48 }}>
-        <div>
-          <h2>Jump to a part</h2>
-          <ol className="chapters">
-            {SITE.chapters.map((c) => (
+      <div className="watch-head">
+        <h1>{SITE.headline}</h1>
+        <span>{SITE.durationMinutes} min · Lifetime access</span>
+      </div>
+      {chapters.length > 0 && (
+        <section className="jump">
+          <span className="label">Jump to</span>
+          <ol>
+            {chapters.map((c) => (
               <li key={c.at}>
                 <button type="button" onClick={() => jump(c.at)}>
                   <time>{clock(c.at * 60)}</time><span>{c.label}</span>
@@ -67,8 +73,8 @@ export default function WatchPlayer() {
               </li>
             ))}
           </ol>
-        </div>
-      </section> */}
+        </section>
+      )}
     </>
   );
 }

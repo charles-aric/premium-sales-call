@@ -6,11 +6,23 @@ import { SITE } from "@/lib/site";
 import { clock, waveform } from "@/lib/format";
 import { track, pixel, priceNumber } from "@/lib/analytics";
 
+const Check = () => (
+  <svg className="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M20 6L9 17l-5-5" />
+  </svg>
+);
+const Arrow = () => (
+  <svg className="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M5 12h14M13 6l6 6-6 6" />
+  </svg>
+);
+
 const BARS = waveform();
 
 export default function Landing() {
   const [status, setStatus] = useState({ text: "", bad: false });
   const [lit, setLit] = useState(null); // [fromMinute, toMinute] of the hovered chapter
+  const [returning, setReturning] = useState(false); // true when Stripe has just sent the buyer back
   const busy = useRef(false);
 
   // Stripe Checkout sends the buyer back here with ?session_id= after paying,
@@ -19,12 +31,13 @@ export default function Landing() {
     const params = new URLSearchParams(window.location.search);
     const sessionId = params.get("session_id");
     if (sessionId) {
+      setReturning(true);
       // GA4 dedupes on transaction_id and Meta on eventID, so a reload of this URL is not counted twice.
       track("purchase", {
         transaction_id: sessionId,
         value: priceNumber(SITE.price),
         currency: "USD",
-        items: [{ item_id: SITE.productPath, item_name: SITE.headline }],
+        items: [{ item_id: SITE.productPath, item_name: SITE.productName }],
       });
       pixel("Purchase", {
         value: priceNumber(SITE.price),
@@ -97,91 +110,212 @@ export default function Landing() {
     busy.current = false;
   }
 
-  const cta = `Pay ${SITE.price} to unlock`;
+  const cta = `Unlock the full call for ${SITE.price}`;
+  const days = SITE.guaranteeDays;
+  const chapters = SITE.showChapters ? SITE.chapters : [];
+  const accessAnswer = SITE.maxDevices > 1
+    ? `Sign in with the email you paid with and the receipt number from your Stripe receipt. One purchase works on up to ${SITE.maxDevices} devices.`
+    : "This browser stays signed in after you pay. If you get signed out, use the email you paid with and the receipt number from your Stripe receipt.";
+  const faq = [SITE.faq[0], ["How do I watch on another device?", accessAnswer], ...SITE.faq.slice(1)].filter(Boolean);
+  const terms = ["One time", "Lifetime access", days ? `${days} day money back` : null, "Card payment by Stripe"].filter(Boolean).join(". ") + ".";
+  const statusLine = <p className={`status${status.bad ? " bad" : ""}`} role="status" aria-live="polite">{status.text}</p>;
+
+  // Stripe has just sent the buyer back. Show the confirmation instead of the sales page.
+  if (returning) {
+    return (
+      <>
+        <header className="top"><span className="name">{SITE.name}</span></header>
+        <main className="narrow">
+          {status.bad ? (
+            <>
+              <span className="eyebrow plain">Almost there</span>
+              <h1>We could not open the video yet.</h1>
+              <p className="lede">{status.text}</p>
+              <Link className="pay block" href="/login">Sign in with your receipt</Link>
+              <p className="fine">Your payment is safe. The receipt email from Stripe has the receipt number you sign in with.</p>
+            </>
+          ) : (
+            <>
+              <div className="done" aria-hidden="true"><Check /></div>
+              <h1>Paid. Your video is unlocking.</h1>
+              <p className="lede">Confirming your payment with Stripe. Keep this page open, the video opens by itself in a few seconds.</p>
+              <p className="fine" role="status" aria-live="polite">Stripe is emailing your receipt. Keep it, the receipt number signs you in on another device.</p>
+            </>
+          )}
+        </main>
+      </>
+    );
+  }
 
   return (
     <>
       <header className="top">
         <span className="name">{SITE.name}</span>
-        <nav><Link href="/login" onClick={() => track("login_click")}>Already paid? Sign in</Link></nav>
+        <nav>
+          <a className="quiet" href="#pricing">Pricing</a>
+          <Link href="/login" onClick={() => track("login_click")}>Already paid? Sign in</Link>
+        </nav>
       </header>
 
       <main>
         <section className="hero">
           <div className="copy">
+            <span className="eyebrow"><i />{SITE.eyebrow}</span>
             <h1>{SITE.headline}</h1>
             <p className="lede">{SITE.lede}</p>
             <div className="buy">
-              <button className="pay" type="button" onClick={() => pay("hero")}>{cta}</button>
-              <p className="fine">
-                One-time payment. Watch as many times as you like, on up to {SITE.maxDevices} devices.
-                Secure checkout by Stripe.
-              </p>
+              <button className="pay big" type="button" onClick={() => pay("hero")}>{cta}<Arrow /></button>
             </div>
-            <p className={`status${status.bad ? " bad" : ""}`} role="status" aria-live="polite">{status.text}</p>
+            <p className="fine">{terms}</p>
+            {statusLine}
           </div>
 
-          <div className="player-col">
-            <div className="player">
-              <div className="locked">
-                <div className="mid">
-                  <svg className="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <rect x="4.5" y="10.5" width="15" height="10" rx="2.5" />
-                    <path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" />
-                  </svg>
-                  <button className="pay" type="button" onClick={() => pay("player")}>{cta}</button>
-                  <p>The full recording plays right after payment.</p>
-                </div>
-                <div className="wave" aria-hidden="true">
-                  <svg viewBox={`0 0 ${BARS.length * 4} 64`} preserveAspectRatio="none">
-                    {BARS.map((h, i) => {
-                      const minute = (i / BARS.length) * SITE.durationMinutes;
-                      const on = lit && minute >= lit[0] && minute < lit[1];
-                      return <rect key={i} className={on ? "on" : ""} x={i * 4} y={(64 - h) / 2} width="2.4" height={h} rx="1.2" />;
-                    })}
-                  </svg>
-                </div>
-                <div className="timebar" aria-hidden="true">
-                  <span>0:00</span><span>{clock(SITE.durationMinutes * 60)}</span>
-                </div>
+          <div className="player">
+            <div className="locked">
+              <div className="mid">
+                <svg className="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <rect x="4.5" y="10.5" width="15" height="10" rx="2.5" />
+                  <path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" />
+                </svg>
+                <button className="pay" type="button" onClick={() => pay("player")}>Pay {SITE.price} to unlock</button>
+                <p>The full recording plays right after payment.</p>
+              </div>
+              <div className="wave" aria-hidden="true">
+                <svg viewBox={`0 0 ${BARS.length * 4} 64`} preserveAspectRatio="none">
+                  {BARS.map((h, i) => {
+                    const minute = (i / BARS.length) * SITE.durationMinutes;
+                    const on = lit && minute >= lit[0] && minute < lit[1];
+                    return <rect key={i} className={on ? "on" : ""} x={i * 4} y={(64 - h) / 2} width="2.4" height={h} rx="1.2" />;
+                  })}
+                </svg>
+              </div>
+              <div className="timebar" aria-hidden="true">
+                <span>0:00</span><span>{clock(SITE.durationMinutes * 60)}</span>
               </div>
             </div>
           </div>
         </section>
 
-        {/* <section className="lower">
+        {SITE.proof.length > 0 && (
+          <section className="proof" aria-label="Track record">
+            {SITE.proof.map((p) => (
+              <div key={p.label}><strong>{p.figure}</strong><span>{p.label}</span></div>
+            ))}
+          </section>
+        )}
+
+        <section className="split">
           <div>
-            <h2>What happens in the recording</h2>
-            <ol className="chapters">
-              {SITE.chapters.map((c, i) => {
-                const next = SITE.chapters[i + 1] ? SITE.chapters[i + 1].at : SITE.durationMinutes;
-                return (
-                  <li key={c.at}>
-                    <button
-                      type="button"
+            <h2>What is inside</h2>
+            <ul className="inside">
+              {SITE.inside.map(([bold, rest]) => (
+                <li key={bold}><Check /><span><strong>{bold}</strong> {rest}</span></li>
+              ))}
+            </ul>
+          </div>
+          {chapters.length > 0 ? (
+            <div>
+              <h2>Minute by minute</h2>
+              <ol className="chapters">
+                {chapters.map((c, i) => {
+                  const next = chapters[i + 1] ? chapters[i + 1].at : SITE.durationMinutes;
+                  return (
+                    <li
+                      key={c.at}
+                      tabIndex={0}
                       onMouseEnter={() => setLit([c.at, next])}
                       onMouseLeave={() => setLit(null)}
                       onFocus={() => setLit([c.at, next])}
                       onBlur={() => setLit(null)}
                     >
                       <time>{clock(c.at * 60)}</time><span>{c.label}</span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ol>
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
+          ) : (
+            <div className="card who">
+              <span className="label">Who this is for</span>
+              <p>{SITE.whoFor}</p>
+              <p className="dim">{SITE.whoNot}</p>
+            </div>
+          )}
+        </section>
+
+        {chapters.length > 0 && (
+          <section className="single">
+            <div className="card who">
+              <span className="label">Who this is for</span>
+              <p>{SITE.whoFor}</p>
+              <p className="dim">{SITE.whoNot}</p>
+            </div>
+          </section>
+        )}
+
+        <section className={`pair${days ? "" : " solo"}`}>
+          <div className="card about">
+            <div className="avatar" aria-hidden="true">SG</div>
+            <div>
+              <h3>{SITE.name}</h3>
+              <p>{SITE.about}</p>
+            </div>
           </div>
-          <div className="already">
+          {days > 0 && (
+            <div className="card guarantee">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z" /><path d="M9 12l2 2 4-4" />
+              </svg>
+              <div>
+                <h3>Watch it. If it was not worth it, say so.</h3>
+                <p>Reply to your receipt within {days} days and you get the money back. No form, no questions.</p>
+              </div>
+            </div>
+          )}
+        </section>
+
+        <section id="pricing" className="pricing">
+          <div className="card">
+            <div className="price-row">
+              <div><span className="price">{SITE.price}</span><span className="dim">one time</span></div>
+              <span className="dim small">Opens right after payment</span>
+            </div>
+            <ul className="ticks">
+              <li><Check />Full call plus consultancy session</li>
+              <li><Check />Lifetime access</li>
+              <li><Check />Watch as many times as you like</li>
+              {days > 0 && <li><Check />{days} day money back</li>}
+            </ul>
+            <button className="pay big block" type="button" onClick={() => pay("pricing")}>Pay {SITE.price} and watch now</button>
+            <p className="dim small center">Secure card checkout by Stripe.</p>
+            {statusLine}
+          </div>
+        </section>
+
+        <section className="split bottom">
+          <div>
+            <h2>Questions</h2>
+            <dl className="faq">
+              {faq.map(([q, a]) => (
+                <div key={q}><dt>{q}</dt><dd>{a}</dd></div>
+              ))}
+            </dl>
+          </div>
+          <div>
             <h2>How access works</h2>
-            <p>
-              After you pay, the video opens right away and this browser stays signed in.
-              On another device, sign in with the email you paid with and the receipt number
-              from your Stripe receipt.
-            </p>
-            <Link className="small-btn" href="/login" style={{ display: "inline-block", textDecoration: "none" }}>Sign in</Link>
+            <div className="card access">
+              <p>After you pay, the video opens right away and this browser stays signed in.</p>
+              <p className="dim">{accessAnswer}</p>
+              <Link className="ghost" href="/login" onClick={() => track("login_click")}>Sign in</Link>
+            </div>
           </div>
-        </section> */}
+        </section>
       </main>
+
+      <div className="sticky">
+        <div><strong>{SITE.price}</strong><span>one time, lifetime access</span></div>
+        <button className="pay" type="button" onClick={() => pay("sticky")}>Unlock now</button>
+      </div>
     </>
   );
 }
