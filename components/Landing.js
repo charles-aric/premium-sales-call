@@ -116,7 +116,7 @@ export default function Landing() {
     busy.current = false;
   }
 
-  const cta = `Unlock everything for ${SITE.price}`;
+  const cta = `Unlock it for ${SITE.price}`;
   const days = SITE.guaranteeDays;
   const chapters = SITE.showChapters ? SITE.chapters : [];
   const accessAnswer = SITE.maxDevices > 1

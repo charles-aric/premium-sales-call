@@ -16,7 +16,7 @@
   --body: "Figtree", "Segoe UI", system-ui, sans-serif;
 }
 * { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; background: var(--bg); color-scheme: dark; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; background: var(--bg); color-scheme: dark; overflow-x: hidden; }
 body {
   margin: 0;
   background: var(--bg);
@@ -174,8 +174,9 @@ h3 { font-weight: 700; font-size: 1.25rem; line-height: 1.2; margin-bottom: 6px;
 .ticks li { display: flex; gap: 10px; align-items: flex-start; }
 .ticks .check { width: 18px; height: 18px; margin-top: 2px; }
 
+
 /* Access */
-.single.bottom { padding: 40px 0 72px; max-width: 640px; display: flex;
+.single.bottom { padding: 40px 0 72px; display: flex;
     justify-content: center;
     align-items: center;
     flex-direction: column; }
