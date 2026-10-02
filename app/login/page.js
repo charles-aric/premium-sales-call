@@ -20,7 +20,7 @@ export default async function LoginPage() {
       <main className="narrow">
         <h1>Sign in to watch</h1>
         <p className="lede">
-          Use the email you paid with. Your order reference is in the receipt email from FastSpring.
+          Use the email you paid with. Your receipt number is in the receipt email from Stripe.
         </p>
         <LoginForm />
       </main>

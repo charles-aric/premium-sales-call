@@ -22,7 +22,7 @@ export default function RootLayout({ children }) {
         <Analytics />
         <div className="wrap">
           {children}
-          <footer>Payments, tax and receipts are handled by FastSpring.</footer>
+          <footer>Payments and receipts are handled by Stripe.</footer>
         </div>
       </body>
     </html>

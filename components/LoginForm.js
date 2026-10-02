@@ -33,8 +33,8 @@ export default function LoginForm() {
         <input id="email" name="email" type="email" autoComplete="email" required />
       </div>
       <div className="field">
-        <label htmlFor="reference">Order reference</label>
-        <input id="reference" name="reference" type="text" placeholder="ENA260918-1234-56789" required />
+        <label htmlFor="reference">Receipt number</label>
+        <input id="reference" name="reference" type="text" placeholder="1234-5678" required />
       </div>
       <button className="pay" type="submit" disabled={sending}>Sign in</button>
       <p className={`status${status.bad ? " bad" : ""}`} role="status" aria-live="polite">{status.text}</p>

@@ -1,51 +1,38 @@
-import crypto from "node:crypto";
-import { SITE } from "@/lib/site";
 import { savePaidOrder, removePaidOrder } from "@/lib/store";
+import { stripe, orderFromSession } from "@/lib/stripe";
 
 export const runtime = "nodejs";
 
-// FastSpring calls this URL when someone pays and when an order is refunded.
-// Subscribe the webhook to two events: order.completed and return.created.
+// Stripe calls this URL when someone pays and when a payment is refunded.
+// Subscribe the endpoint to checkout.session.completed,
+// checkout.session.async_payment_succeeded and charge.refunded.
 export async function POST(request) {
   const raw = await request.text();
-  const given = request.headers.get("x-fs-signature") || "";
-  const expected = crypto
-    .createHmac("sha256", process.env.FS_WEBHOOK_SECRET || "")
-    .update(raw)
-    .digest("base64");
-  const valid =
-    process.env.FS_WEBHOOK_SECRET &&
-    given.length === expected.length &&
-    crypto.timingSafeEqual(Buffer.from(given), Buffer.from(expected));
-  if (!valid) return new Response("Bad signature", { status: 401 });
-
-  let payload;
+  let event;
   try {
-    payload = JSON.parse(raw);
+    event = stripe().webhooks.constructEvent(
+      raw,
+      request.headers.get("stripe-signature") || "",
+      process.env.STRIPE_WEBHOOK_SECRET || ""
+    );
   } catch {
-    return new Response("Bad JSON", { status: 400 });
+    return new Response("Bad signature", { status: 401 });
   }
 
-  for (const event of payload.events || []) {
-    const data = event.data || {};
+  const data = event.data.object;
 
-    if (event.type === "order.completed" && data.completed === true) {
-      const items = Array.isArray(data.items) ? data.items : [];
-      const isOurProduct = items.some((i) => {
-        const path = typeof i.product === "string" ? i.product : i.product?.product;
-        return path === SITE.productPath;
-      });
-      if (isOurProduct) await savePaidOrder(data);
-    }
-
-    if (event.type === "return.created") {
-      const original = data.original || {};
-      const orderId =
-        original.id || original.order || (typeof data.order === "string" ? data.order : data.order?.id);
-      if (orderId) await removePaidOrder(orderId);
-    }
+  // Covers buyers who pay and close the tab before Stripe sends them back to the site.
+  if (event.type === "checkout.session.completed" || event.type === "checkout.session.async_payment_succeeded") {
+    const order = orderFromSession(data);
+    if (order) await savePaidOrder(order);
   }
 
-  // 200 tells FastSpring the events were handled. A crash above returns 500 and FastSpring retries.
+  // Only a full refund ends access. A partial refund leaves charge.refunded false.
+  if (event.type === "charge.refunded" && data.refunded) {
+    const orderId = typeof data.payment_intent === "string" ? data.payment_intent : data.payment_intent?.id;
+    if (orderId) await removePaidOrder(orderId);
+  }
+
+  // 200 tells Stripe the event was handled. A crash above returns 500 and Stripe retries.
   return new Response("ok");
 }

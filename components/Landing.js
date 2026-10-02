@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Script from "next/script";
 import Link from "next/link";
 import { SITE } from "@/lib/site";
 import { clock, waveform } from "@/lib/format";
@@ -14,91 +13,94 @@ export default function Landing() {
   const [lit, setLit] = useState(null); // [fromMinute, toMinute] of the hovered chapter
   const busy = useRef(false);
 
-  // FastSpring calls this global function when the checkout popup closes.
-  // data is null when the buyer closed it without paying.
+  // Stripe Checkout sends the buyer back here with ?session_id= after paying,
+  // or with ?checkout=canceled when they leave the checkout page without paying.
   useEffect(() => {
-    window.onCheckoutClosed = (data) => {
-      if (data && data.id) {
-        track("purchase", {
-          transaction_id: data.id,
-          value: priceNumber(SITE.price),
-          currency: "USD",
-          items: [{ item_id: SITE.productPath, item_name: SITE.headline }],
-        });
-        pixel("Purchase", {
-          value: priceNumber(SITE.price),
-          currency: "USD",
-          content_ids: [SITE.productPath],
-          content_type: "product",
-        }, data.id);
-        unlock(data.id, 24);
-      } else {
-        track("checkout_abandon");
-      }
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get("session_id");
+    if (sessionId) {
+      // GA4 dedupes on transaction_id and Meta on eventID, so a reload of this URL is not counted twice.
+      track("purchase", {
+        transaction_id: sessionId,
+        value: priceNumber(SITE.price),
+        currency: "USD",
+        items: [{ item_id: SITE.productPath, item_name: SITE.headline }],
+      });
+      pixel("Purchase", {
+        value: priceNumber(SITE.price),
+        currency: "USD",
+        content_ids: [SITE.productPath],
+        content_type: "product",
+      }, sessionId);
+      unlock(sessionId);
+    } else if (params.get("checkout") === "canceled") {
+      track("checkout_abandon");
+      window.history.replaceState(null, "", "/");
+    }
+
+    // Pressing Back on the Stripe page can restore this page mid-"Opening checkout". Reset it.
+    const onShow = (e) => {
+      if (!e.persisted) return;
+      busy.current = false;
+      setStatus({ text: "", bad: false });
     };
-    return () => { delete window.onCheckoutClosed; };
+    window.addEventListener("pageshow", onShow);
+    return () => window.removeEventListener("pageshow", onShow);
   }, []);
 
-  async function unlock(orderId, triesLeft) {
+  async function unlock(sessionId) {
     busy.current = true;
     setStatus({ text: "Confirming your payment. Keep this page open.", bad: false });
     try {
       const res = await fetch("/api/unlock", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ orderId }),
+        body: JSON.stringify({ sessionId }),
       });
       const data = await res.json();
       if (data.ok) {
-        track("purchase_confirmed", { transaction_id: orderId });
+        track("purchase_confirmed", { transaction_id: sessionId });
         window.location.href = "/watch";
         return;
       }
-      if (res.status === 409 && triesLeft > 0) {
-        setTimeout(() => unlock(orderId, triesLeft - 1), 2500);
-        return;
-      }
-      track("unlock_failed", { transaction_id: orderId, reason: data.message || `status_${res.status}` });
+      track("unlock_failed", { transaction_id: sessionId, reason: data.message || `status_${res.status}` });
       setStatus({ text: data.message || "Could not unlock. Try signing in.", bad: true });
     } catch (err) {
-      track("unlock_failed", { transaction_id: orderId, reason: (err && err.message) || "network_error" });
+      track("unlock_failed", { transaction_id: sessionId, reason: (err && err.message) || "network_error" });
       setStatus({ text: "Connection problem. Check your internet, then sign in with your receipt details.", bad: true });
     }
     busy.current = false;
   }
 
-  function pay(location) {
+  async function pay(location) {
     if (busy.current) return;
+    busy.current = true;
     track("cta_click", { cta_location: location, cta_text: cta, price: SITE.price });
-    if (!window.fastspring || !window.fastspring.builder) {
-      track("checkout_not_ready", { cta_location: location });
-      setStatus({ text: "Checkout is still loading. Try again in a moment.", bad: true });
+    setStatus({ text: "Opening checkout...", bad: false });
+    try {
+      const res = await fetch("/api/checkout", { method: "POST" });
+      const data = await res.json();
+      if (!data.url) throw new Error(data.message || `status_${res.status}`);
+      track("checkout_open", { cta_location: location });
+      pixel("InitiateCheckout", {
+        value: priceNumber(SITE.price),
+        currency: "USD",
+        content_ids: [SITE.productPath],
+        content_type: "product",
+      });
+      window.location.href = data.url;
       return;
+    } catch (err) {
+      track("checkout_error", { cta_location: location, reason: (err && err.message) || "network_error" });
+      setStatus({ text: "Checkout could not start. Try again in a moment.", bad: true });
     }
-    window.fastspring.builder.reset();
-    window.fastspring.builder.add(SITE.productPath);
-    window.fastspring.builder.checkout();
-    track("checkout_open", { cta_location: location });
-    pixel("InitiateCheckout", {
-      value: priceNumber(SITE.price),
-      currency: "USD",
-      content_ids: [SITE.productPath],
-      content_type: "product",
-    });
+    busy.current = false;
   }
 
   const cta = `Pay ${SITE.price} to unlock`;
 
   return (
     <>
-      <Script
-        id="fsc-api"
-        src={`https://sbl.onfastspring.com/sbl/${SITE.sblVersion}/fastspring-builder.min.js`}
-        strategy="afterInteractive"
-        data-storefront={SITE.storefront}
-        data-popup-closed="onCheckoutClosed"
-      />
-
       <header className="top">
         <span className="name">{SITE.name}</span>
         <nav><Link href="/login" onClick={() => track("login_click")}>Already paid? Sign in</Link></nav>
@@ -113,7 +115,7 @@ export default function Landing() {
               <button className="pay" type="button" onClick={() => pay("hero")}>{cta}</button>
               <p className="fine">
                 One-time payment. Watch as many times as you like, on up to {SITE.maxDevices} devices.
-                Checkout by FastSpring, with cards and PayPal.
+                Secure checkout by Stripe.
               </p>
             </div>
             <p className={`status${status.bad ? " bad" : ""}`} role="status" aria-live="polite">{status.text}</p>
@@ -173,8 +175,8 @@ export default function Landing() {
             <h2>How access works</h2>
             <p>
               After you pay, the video opens right away and this browser stays signed in.
-              On another device, sign in with the email you paid with and the order reference
-              from your FastSpring receipt.
+              On another device, sign in with the email you paid with and the receipt number
+              from your Stripe receipt.
             </p>
             <Link className="small-btn" href="/login" style={{ display: "inline-block", textDecoration: "none" }}>Sign in</Link>
           </div>
