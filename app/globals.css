@@ -74,6 +74,27 @@ h3 { font-weight: 700; font-size: 1.25rem; line-height: 1.2; margin-bottom: 6px;
 .pay:hover { background: var(--accent-hi); color: var(--bg); }
 .pay:active { transform: translateY(1px); }
 .pay[disabled] { opacity: .6; cursor: progress; }
+.pay.busy, .pay.busy:hover { opacity: 1; background: var(--accent); }
+
+/* Loading */
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes fade { from { opacity: 0; } }
+.spinner {
+  flex-shrink: 0; width: 20px; height: 20px; border-radius: 50%;
+  border: 2.5px solid currentColor; border-right-color: transparent;
+  animation: spin .7s linear infinite;
+}
+.overlay {
+  position: fixed; inset: 0; z-index: 50;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+  padding: 24px; text-align: center;
+  background: rgba(14, 14, 16, .88); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  animation: fade .2s ease;
+}
+.overlay .spinner { width: 44px; height: 44px; border-width: 3px; color: var(--accent); margin-bottom: 6px; }
+.overlay p { margin: 0; font: 700 1.25rem/1.2 var(--display); color: var(--text); }
+.overlay span:not(.spinner) { font-size: 0.9375rem; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 1.6s; } .overlay { animation: none; } }
 .pay.big { min-height: 58px; padding: 0 28px; font-size: 1.1875rem; }
 .pay.block { display: flex; width: 100%; }
 .pay .arrow { width: 20px; height: 20px; }

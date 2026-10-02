@@ -23,12 +23,15 @@ const Instagram = () => (
   </svg>
 );
 
+const Spinner = () => <span className="spinner" aria-hidden="true" />;
+
 const BARS = waveform();
 
 export default function Landing() {
   const [status, setStatus] = useState({ text: "", bad: false });
   const [lit, setLit] = useState(null); // [fromMinute, toMinute] of the hovered chapter
   const [returning, setReturning] = useState(false); // true when Stripe has just sent the buyer back
+  const [opening, setOpening] = useState(null); // which button started checkout, while Stripe's page loads
   const busy = useRef(false);
 
   // Stripe Checkout sends the buyer back here with ?session_id= after paying,
@@ -61,6 +64,7 @@ export default function Landing() {
     const onShow = (e) => {
       if (!e.persisted) return;
       busy.current = false;
+      setOpening(null);
       setStatus({ text: "", bad: false });
     };
     window.addEventListener("pageshow", onShow);
@@ -95,7 +99,8 @@ export default function Landing() {
     if (busy.current) return;
     busy.current = true;
     track("cta_click", { cta_location: location, cta_text: cta, price: SITE.price });
-    setStatus({ text: "Opening checkout...", bad: false });
+    setOpening(location);
+    setStatus({ text: "", bad: false });
     try {
       const res = await fetch("/api/checkout", { method: "POST" });
       const data = await res.json();
@@ -111,6 +116,7 @@ export default function Landing() {
       return;
     } catch (err) {
       track("checkout_error", { cta_location: location, reason: (err && err.message) || "network_error" });
+      setOpening(null);
       setStatus({ text: "Checkout could not start. Try again in a moment.", bad: true });
     }
     busy.current = false;
@@ -124,6 +130,15 @@ export default function Landing() {
     : "This browser stays signed in after you pay. If you get signed out, use the email you paid with and the receipt number from your Stripe receipt.";
   const terms = ["One time", "Lifetime access", days ? `${days} day money back` : null, "Card payment by Stripe"].filter(Boolean).join(". ") + ".";
   const statusLine = <p className={`status${status.bad ? " bad" : ""}`} role="status" aria-live="polite">{status.text}</p>;
+  // One pay button. While checkout opens, the pressed one shows a spinner and the rest are disabled.
+  const PayButton = ({ location, className = "", children }) => {
+    const active = opening === location;
+    return (
+      <button className={`pay ${className}${active ? " busy" : ""}`} type="button" disabled={opening !== null} onClick={() => pay(location)}>
+        {active ? <><Spinner />Opening checkout</> : children}
+      </button>
+    );
+  };
 
   // Stripe has just sent the buyer back. Show the confirmation instead of the sales page.
   if (returning) {
@@ -169,7 +184,7 @@ export default function Landing() {
             <h1>{SITE.headline}</h1>
             <p className="lede">{SITE.lede}</p>
             <div className="buy">
-              <button className="pay big" type="button" onClick={() => pay("hero")}>{cta}<Arrow /></button>
+              <PayButton location="hero" className="big">{cta}<Arrow /></PayButton>
             </div>
             <p className="fine">{terms}</p>
             {statusLine}
@@ -182,7 +197,7 @@ export default function Landing() {
                   <rect x="4.5" y="10.5" width="15" height="10" rx="2.5" />
                   <path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" />
                 </svg>
-                <button className="pay" type="button" onClick={() => pay("player")}>Pay {SITE.price} to unlock</button>
+                <PayButton location="player">Pay {SITE.price} to unlock</PayButton>
                 <p>The full recording plays right after payment.</p>
               </div>
               <div className="wave" aria-hidden="true">
@@ -294,7 +309,7 @@ export default function Landing() {
               ))}
               {days > 0 && <li><Check />{days} day money back</li>}
             </ul>
-            <button className="pay big block" type="button" onClick={() => pay("pricing")}>Pay {SITE.price} and watch now</button>
+            <PayButton location="pricing" className="big block">Pay {SITE.price} and watch now</PayButton>
             <p className="dim small center">Secure card checkout by Stripe.</p>
             {statusLine}
           </div>
@@ -312,8 +327,16 @@ export default function Landing() {
 
       <div className="sticky">
         <div><strong>{SITE.price}</strong><span>one time, lifetime access</span></div>
-        <button className="pay" type="button" onClick={() => pay("sticky")}>Unlock now</button>
+        <PayButton location="sticky">Unlock now</PayButton>
       </div>
+
+      {opening !== null && (
+        <div className="overlay" role="status" aria-live="polite">
+          <span className="spinner" aria-hidden="true" />
+          <p>Opening secure checkout</p>
+          <span>Card payments by Stripe. This takes a few seconds.</span>
+        </div>
+      )}
     </>
   );
 }
